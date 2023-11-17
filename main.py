@@ -18,7 +18,6 @@ catalog_items = [
 ]
 
 current_photo_index = 0
-korzina = 0
 
 # Функция для обновления текущей фотографии с описанием
 def update_catalog_item(chat_id, item_index, message_id=None):
@@ -41,8 +40,14 @@ def update_catalog_item(chat_id, item_index, message_id=None):
 @bot.message_handler(commands=['start'])
 def start(message):
     bot.send_message(message.chat.id, 'Привет! Добро пожаловать!')
-    logger.info(f"Пользователь {message.from_user.id} запустил бота")
-
+    logger.info(f"Пользователь {message.from_user.id} Отправил {message.text}")
+    keyboard = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
+    button1 = types.KeyboardButton('Добавить')
+    button2 = types.KeyboardButton('Список Заказов')
+    button3 = types.KeyboardButton('Корзина')
+    keyboard.add(button1, button2, button3)
+    bot.send_message(message.chat.id, 'Выберите действие:', reply_markup=keyboard)
+    print(f"Пользователь {message.from_user.id} отправил {message.text}")
 
 # Обработчик команды /каталог
 @bot.message_handler(commands=['katalog'])
@@ -66,8 +71,6 @@ def show_menu(message):
 @bot.callback_query_handler(func=lambda call: True)
 def callback_inline(call):
     global current_photo_index
-    global korzina
-
 
     if call.data == "previous":
         current_photo_index = (current_photo_index - 1) % len(catalog_items)
@@ -77,9 +80,6 @@ def callback_inline(call):
         current_photo_index = (current_photo_index + 1) % len(catalog_items)
         update_catalog_item(call.message.chat.id, current_photo_index, message_id=call.message.message_id)
 
-    elif call.data == "plus":
-        korzina += 1
-        print(korzina)
     logger.info(f"Пользователь {call.from_user.id} нажал кнопку {call.data}")
 
 # Обработчик всех текстовых сообщений
