@@ -66,11 +66,11 @@ def callback_inline(call):
     global current_photo_index
 
     if call.data == "previous":
-        current_photo_index = (current_photo_index - 1) % len(catalog_items)
+        current_photo_index = (current_photo_index - 1) % len(funcs.catalog_items)
         funcs.update_catalog_item(call.message.chat.id, current_photo_index, message_id=call.message.message_id)
 
     elif call.data == "next":
-        current_photo_index = (current_photo_index + 1) % len(catalog_items)
+        current_photo_index = (current_photo_index + 1) % len(funcs.catalog_items)
         funcs.update_catalog_item(call.message.chat.id, current_photo_index, message_id=call.message.message_id)
 
     logger.info(f"Пользователь {call.from_user.id} нажал кнопку {call.data}")
