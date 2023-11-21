@@ -45,11 +45,10 @@ def start(message):
         elif user[3] == 'admin':
             funcs.send_admin_menu(user_id)
     else:
-        funcs.authorization(message)
+        funcs.register(message)
 
 
 # Функция для обработки команды Авторизироваться для простой регистрации
-@bot.message_handler(func=lambda message: message.text == 'Авторизироваться')
 def register(message):
     user_id = message.from_user.id
     username = message.from_user.username
@@ -59,7 +58,7 @@ def register(message):
     user = cursor.fetchone()
 
     if user:
-        bot.send_message(user_id, "Вы уже зарегистрированы.")
+        funcs.send_physical_menu(user_id)
     else:
         # Добавление нового пользователя в базу данных
         cursor.execute("INSERT INTO users (telegram_id, username, role) VALUES (%s, %s, %s)",

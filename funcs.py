@@ -1,5 +1,14 @@
 import telebot
 import mysql.connector
+import datetime
+# Открываем файл для записи логов
+log_file = open("bot_logs.txt", "a")  # "a" - режим добавления новой информации в файл
+
+# Функция для записи логов в файл
+def log(message):
+    current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")  # Текущая дата и время
+    log_file.write(f"[{current_time}] {message}\n")
+    log_file.flush()  # Сбрасываем буфер, чтобы гарантировать запись в файл
 
 db_connection = mysql.connector.connect(
     host='localhost',
@@ -28,7 +37,7 @@ def process_admin_registration(message):
     telegram_id = registration_data[4]
 
     # Проверка, зарегистрирован ли уже этот пользователь
-    cursor.execute("SELECT * FROM users WHERE username = %s", (username_to_register,))
+    cursor.execute("SELECT * FROM users WHERE username = %s", (username_to_register,)) # type: ignore
     registered_user = cursor.fetchone()
 
     if registered_user:
@@ -39,15 +48,27 @@ def process_admin_registration(message):
                        (username_to_register, role, password, telegram_id))
         db_connection.commit()
         bot.send_message(admin_id, f"Пользователь {username_to_register} успешно зарегистрирован.")
-        log(f"Пользователь {user_id} Отправил команду зарегистрировал пользователя {username_to_register}.")
+        log(f"Пользователь {admin_id} Отправил команду зарегистрировал пользователя {username_to_register}.")
 
-
-def authorization(message):
+#Регистрация нового пользователя
+def register(message):
     user_id = message.from_user.id
     username = message.from_user.username
-    markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
-    markup.row('Авторизироваться')
-    bot.send_message(user_id,f"Привет, {username}! Вы не зарегистрированы. Нажмите кнопку ниже чтобы зарегистрироваться", reply_markup=markup)
+
+    # Проверка, зарегистрирован ли пользователь уже в базе данных
+    cursor.execute("SELECT * FROM users WHERE telegram_id = %s", (user_id,))
+    user = cursor.fetchone()
+
+    if user:
+        bot.send_message(user_id, "Вы уже зарегистрированы.")
+    else:
+        # Добавление нового пользователя в базу данных
+        cursor.execute("INSERT INTO users (telegram_id, username, role) VALUES (%s, %s, %s)",
+                       (user_id, username, 'physical'))  # 'physical' - роль для обычных пользователей
+        db_connection.commit()
+        bot.send_message(user_id, "Вы успешно зарегистрированы.")
+        send_physical_menu(user_id)
+        log(f"Новый пользователь {user_id} зарегистрирован.")
 
 # Функции для отправки различных меню в зависимости от роли пользователя
 def send_physical_menu(user_id):
