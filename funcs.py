@@ -1,16 +1,5 @@
 import telebot
 import mysql.connector
-import datetime  # Для работы с датой и временем
-
-# Открываем файл для записи логов
-log_file = open("bot_logs.txt", "a")  # "a" - режим добавления новой информации в файл
-
-# Функция для записи логов в файл
-def log(message):
-    current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")  # Текущая дата и время
-    log_file.write(f"[{current_time}] {message}\n")
-    log_file.flush()  # Сбрасываем буфер, чтобы гарантировать запись в файл
-
 
 db_connection = mysql.connector.connect(
     host='localhost',
@@ -30,6 +19,7 @@ def process_admin_registration(message):
 
     if len(registration_data) != 5:
         bot.send_message(admin_id, "Неправильный формат данных. Используйте: /register username role password user_id")
+
         return
 
     username_to_register = registration_data[1]
@@ -49,7 +39,7 @@ def process_admin_registration(message):
                        (username_to_register, role, password, telegram_id))
         db_connection.commit()
         bot.send_message(admin_id, f"Пользователь {username_to_register} успешно зарегистрирован.")
-        log(f"Пользователь {admin_id} Отправил команду зарегистрировал пользователя {username_to_register}.")
+        log(f"Пользователь {user_id} Отправил команду зарегистрировал пользователя {username_to_register}.")
 
 
 def authorization(message):
