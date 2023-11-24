@@ -1,8 +1,41 @@
 import telebot
+from telebot import types
 import mysql.connector
 import datetime
 # Открываем файл для записи логов
 log_file = open("bot_logs.txt", "a")  # "a" - режим добавления новой информации в файл
+
+current_photo_index = 0
+
+
+catalog_items = [
+    {'photo': 'AgACAgIAAxkBAAMQZVM6siVjGQqCNKI6nAObo1Xz-3wAAmXTMRuLfKFKHNOX1yMbO_YBAAMCAANtAAMzBA', 
+    'description': 'Описание товара 1'},
+    {'photo': 'AgACAgIAAxkBAAMRZVM6xbOB1s63csQpU_ypHFkC5rIAAmfTMRuLfKFKmGm0kfaO2PwBAAMCAANtAAMzBA',
+    'description': 'Описание товара 2'},
+    {'photo': 'AgACAgIAAxkBAAMTZVM63IeRLCpM3XSnowceRsiVvoAAAmnTMRuLfKFK-ksIdDCv0BIBAAMCAANtAAMzBA', 
+    'description': 'Описание товара 3'},
+]
+
+
+# Функция для обновления текущей фотографии с описанием
+def update_catalog_item(chat_id, item_index, message_id=None):
+    item = catalog_items[item_index]
+    photo = item['photo']
+    description = item['description']
+
+    keyboard = types.InlineKeyboardMarkup()
+    button_previous = types.InlineKeyboardButton("<-", callback_data="previous")
+    button_plus = types.InlineKeyboardButton("+", callback_data="plus")
+    button_next = types.InlineKeyboardButton("->", callback_data="next")
+    keyboard.add(button_previous, button_plus, button_next)
+
+    if message_id:  # Если сообщение существует, обновляем его
+        bot.edit_message_media(media=types.InputMediaPhoto(photo, caption=description), chat_id=chat_id, message_id=message_id, reply_markup=keyboard)
+    else:  # Если сообщения нет, отправляем новое
+        bot.send_photo(chat_id, photo, caption=description, reply_markup=keyboard)
+
+
 
 # Функция для записи логов в файл
 def log(message):
@@ -10,6 +43,7 @@ def log(message):
     log_file.write(f"[{current_time}] {message}\n")
     log_file.flush()  # Сбрасываем буфер, чтобы гарантировать запись в файл
 
+# Open connection to db
 db_connection = mysql.connector.connect(
     host='localhost',
     user='Qosimjon',
@@ -28,6 +62,8 @@ def start(message):
     # Проверка, зарегистрирован ли пользователь в базе данных
     cursor.execute("SELECT * FROM users WHERE telegram_id = %s", (user_id,))
     user = cursor.fetchone()
+
+
 
     if user:
         log(f"Пользователь {user_id} существует и вошёл в систему.")
