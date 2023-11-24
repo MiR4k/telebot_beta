@@ -1,73 +1,14 @@
 import telebot
-import mysql.connector
-import funcs
-import datetime  # Для работы с датой и временем
-
-# Открываем файл для записи логов
-log_file = open("bot_logs.txt", "a")  # "a" - режим добавления новой информации в файл
-
-# Функция для записи логов в файл
-def log(message):
-    current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")  # Текущая дата и время
-    log_file.write(f"[{current_time}] {message}\n")
-    log_file.flush()  # Сбрасываем буфер, чтобы гарантировать запись в файл
-
-# Установка соединения с базой данных
-db_connection = mysql.connector.connect(
-    host='localhost',
-    user='Qosimjon',
-    password='19739',
-    database='Qosimjon'
-)
-cursor = db_connection.cursor()
+from funcs import *
 
 # Инициализация бота
 bot = telebot.TeleBot("6668392385:AAEv2_ROZSkJFQjaVp29uEhfFPrG6xN_Bp4")
 
 # Обработка команды /start
 @bot.message_handler(commands=['start'])
-def start(message):
-    user_id = message.from_user.id
-    username = message.from_user.username
-
-    # Проверка, зарегистрирован ли пользователь в базе данных
-    cursor.execute("SELECT * FROM users WHERE telegram_id = %s", (user_id,))
-    user = cursor.fetchone()
-
-    if user:
-        log(f"Пользователь {user_id} существует и вошёл в систему.")
-        bot.send_message(user_id, f"Привет, {username}! Вы уже зарегистрированы.")
-        # Отправка главного меню в зависимости от роли пользователя
-        if user[3] == 'physical':
-            funcs.send_physical_menu(user_id)
-        elif user[3] == 'legal':
-            funcs.send_legal_menu(user_id)
-        elif user[3] == 'admin':
-            funcs.send_admin_menu(user_id)
-    else:
-        funcs.register(message)
-
-
-# Функция для обработки команды Авторизироваться для простой регистрации
-def register(message):
-    user_id = message.from_user.id
-    username = message.from_user.username
-
-    # Проверка, зарегистрирован ли пользователь уже в базе данных
-    cursor.execute("SELECT * FROM users WHERE telegram_id = %s", (user_id,))
-    user = cursor.fetchone()
-
-    if user:
-        funcs.send_physical_menu(user_id)
-    else:
-        # Добавление нового пользователя в базу данных
-        cursor.execute("INSERT INTO users (telegram_id, username, role) VALUES (%s, %s, %s)",
-                       (user_id, username, 'physical'))  # 'physical' - роль для обычных пользователей
-        db_connection.commit()
-        bot.send_message(user_id, "Вы успешно зарегистрированы.")
-        funcs.send_physical_menu(user_id)
-        log(f"Новый пользователь {user_id} зарегистрирован.")
-
+def _(message):
+    start(message)
+   
 
 # Функция для регистрации пользователей для администраторов
 @bot.message_handler(commands=['admin_register'])
@@ -82,8 +23,7 @@ def admin_register(message):
     if admin_user:
         # Получение информации о пользователе, которого нужно зарегистрировать (в данном случае, по его username)
         bot.send_message(user_id, "Используйте: /register username role password user_id")
-        bot.register_next_step_handler(message, funcs.process_admin_registration)
-        log(f"Пользователь {user_id} Отправил команду зарегистрировал пользователя.")
+        bot.register_next_step_handler(message, process_admin_registration)
 
     else:
         log(f"Пользователь {user_id} Отправил команду admin_register.")
@@ -92,6 +32,7 @@ def admin_register(message):
 
 
 log("Бот Запущен")
-print("Bot ")
+print("Bot Enabled")
 # Запуск бота
 bot.polling()
+
