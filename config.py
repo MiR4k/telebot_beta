@@ -11,6 +11,8 @@ try:
         host='localhost',
         database='hleb'
     )
+
+
 except mysql.connector.Error as err:
     if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
         print("Неверные логин или пароль")
